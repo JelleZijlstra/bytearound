@@ -21,7 +21,8 @@ def main():
         long_description=readme
         author='Jelle Zijlstra',
         author_email='jelle.zijlstra@gmail.com',
-        packages=['bytearound']
+        packages=['bytearound'],
+        url='https://github.com/JelleZijlstra/bytearound',
     )
 
 

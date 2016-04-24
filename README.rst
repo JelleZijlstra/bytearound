@@ -40,10 +40,10 @@ holds--that is, converting a Python code object to the bytearound representation
 give an identical code object. Ensuring that this invariant holds makes it easier to test the code for correctness. The function debug.check() exists to check this invariant.
 
 Unfortunately, there are a number of quirks in the way that CPython generates code objects that
-turn out to be hard to replicate. To replicate some of these, I added a pessimize= argument to
-ByteAround.to_code that attempts to faithfully replicate CPython even when not doing so would be a
-little more efficient. However, it may not turn out to be possible to do this fully. Known issues
-include:
+turn out to be hard to replicate. To replicate some of these, I added a ``pessimize=`` argument to
+``ByteAround.to_code`` that attempts to faithfully replicate CPython even when not doing so would
+be a little more efficient. However, it may not turn out to be possible to do this fully. Known
+issues include:
 
 * CPython computes some parts of the code object before it runs the peephole optimizer, which can
   cause co_stacksize to be too high (because the peephole optimizer can turn a series of opcodes
