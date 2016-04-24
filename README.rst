@@ -32,8 +32,8 @@ And a simple modification::
     f.func_code = ba.to_code()
     f()
 
-Design
-------
+Design and limitations
+----------------------
 
 I designed and wrote bytearound to ensure that ``co == ByteAround.from_code(co).to_code()`` always
 holds--that is, converting a Python code object to the bytearound representation and back should
@@ -44,11 +44,12 @@ turn out to be hard to replicate. To replicate some of these, I added a pessimiz
 ByteAround.to_code that attempts to faithfully replicate CPython even when not doing so would be a
 little more efficient. However, it may not turn out to be possible to do this fully. Known issues
 include:
-* `issue 26549 <https://bugs.python.org/issue26549>`_: CPython computes some parts of the code
-  object before it runs the peephole optimizer, which can cause co_stacksize to be too high
-  (because the peephole optimizer can turn a series of opcodes building a tuple into a single
-  LOAD_CONST opcode). This same issue can also affect the ordering of the co_consts field,
-  apparently because the optimizer adds new constants to the end of the list.
+
+* CPython computes some parts of the code object before it runs the peephole optimizer, which can
+  cause co_stacksize to be too high (because the peephole optimizer can turn a series of opcodes
+  building a tuple into a single LOAD_CONST opcode). The same issue can also affect the ordering
+  of the co_consts field, apparently because the optimizer adds new constants to the end of the
+  list.
 * When singleton objects like None and True are used in a function, CPython adds their name to the
   co_names field (unnecessarily, because the objects are loaded directly with LOAD_CONST) and adds
   the constants to the end of the co_consts list. (Normally, co_consts includes constants in order
@@ -57,8 +58,10 @@ include:
 * The code object for single-line generator expressions like (f(x) for x in y) has a nonempty
   co_lnotab field, but the co_lnotab for a function defined like "def f(x): print(x)" is empty. In
   some other circumstances CPython also generates an unnecessary 0 offset entry in co_lnotab.
-* If a function takes an *args argument, but does not use it, CPython will include the name args in
-  co_varnames, but bytearound will not.
+* If a function takes a starargs argument, but does not use it, CPython will include the name args
+  in co_varnames, but bytearound will not.
+* Large opargs (using EXTENDED_ARG) and large and negative line number offsets are not well-tested
+  and have some known issues, noted in the code.
 
 Links
 -----
@@ -66,6 +69,7 @@ Links
 * `compile.c source <https://github.com/python/cpython/blob/2.7/Python/compile.c>`_
 * `dis.py source <https://github.com/python/cpython/blob/2.7/Lib/dis.py>`_
 * `lnotab explanation <https://github.com/python/cpython/blob/master/Objects/lnotab_notes.txt>`_
+* `issue 26549 <https://bugs.python.org/issue26549>`_ (cause of some of the issues described above)
 
 Similar modules
 ---------------
