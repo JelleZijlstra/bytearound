@@ -2,7 +2,7 @@
 bytearound
 **********
 
-bytearound is a module for handling CPython 2.7 bytecode. It provides a representation
+bytearound is a module for handling CPython 2.7.11 bytecode. It provides a representation
 of bytecode that is easier to modify, create, and inspect than CPython's internal representation.
 
 An example of how to create code::
@@ -60,6 +60,10 @@ issues include:
   some other circumstances CPython also generates an unnecessary 0 offset entry in co_lnotab.
 * Large opargs (using EXTENDED_ARG) and large line number offsets are not well-tested and have
   some known issues, noted in the code.
+
+bytearound has been tested only on Python 2.7.11. Previous releases in the 2.7 series should
+mostly work, but some changes have been made during the series that impact code objects (e.g.
+`issue 21523 <https://bugs.python.org/issue21523>`_).
 
 Links
 -----

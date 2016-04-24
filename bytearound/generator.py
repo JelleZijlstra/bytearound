@@ -25,9 +25,9 @@ def generate(ba, pessimize=False):
     label_to_offset = {}
 
     if ba.is_function():
-        consts = [ba.docstring]
+        consts = _ConstsList(ba.docstring)
     else:
-        consts = []
+        consts = _ConstsList()
     cellvars = []
     freevars = []
     varnames = list(ba.argnames)
@@ -44,11 +44,11 @@ def generate(ba, pessimize=False):
             if pessimize:
                 if isinstance(constant, tuple):
                     for item in constant:
-                        _get_or_add(consts, item)
+                        consts.add(item)
                     consts_to_move.add(constant)
-                if constant is None and not (ba.is_function() and consts[0] is None):
+                if constant is None and not (ba.is_function() and consts.objs[0] is None):
                     consts_to_move.add(constant)
-            return _get_or_add(consts, constant)
+            return consts.add(constant)
         elif instr.opcode in opcode.hasfree:
             name, kind = instr.oparg
             if kind == objects.cell_or_free.cell:
@@ -106,8 +106,6 @@ def generate(ba, pessimize=False):
             label_to_offset[instr] = current_offset
 
     if pessimize:
-        consts.sort(key=lambda constant: constant in consts_to_move)
-
         for name, insert_after in ba.pessimized_names.iteritems():
             if name not in names:
                 if insert_after is None:
@@ -162,7 +160,7 @@ def generate(ba, pessimize=False):
                for instr in ba.instructions):
             lnotab.append((6, 0))
 
-    return code, consts, cellvars, freevars, varnames, names, lnotab
+    return code, consts.as_tuple(), cellvars, freevars, varnames, names, lnotab
 
 
 def _get_or_add(lst, obj):
@@ -171,6 +169,33 @@ def _get_or_add(lst, obj):
     except ValueError:
         lst.append(obj)
         return len(lst) - 1
+
+
+class _ConstsList(object):
+    """Maintains a list of constants.
+
+    Needed because co_consts can contain different objects that nonetheless compare equal when
+    simply put in a list (e.g. 1 and 1.0). This objects keeps track of them by object identity.
+
+    """
+    def __init__(self, *args):
+        self.obj_to_idx = {}
+        self.objs = []
+
+        for arg in args:
+            self.add(arg)
+
+    def add(self, obj):
+        identity = id(obj)
+        if identity in self.obj_to_idx:
+            return self.obj_to_idx[identity]
+        idx = len(self.objs)
+        self.objs.append(obj)
+        self.obj_to_idx[identity] = idx
+        return idx
+
+    def as_tuple(self):
+        return tuple(self.objs)
 
 
 # Stack size calculation
