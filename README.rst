@@ -58,15 +58,15 @@ issues include:
 * The code object for single-line generator expressions like (f(x) for x in y) has a nonempty
   co_lnotab field, but the co_lnotab for a function defined like "def f(x): print(x)" is empty. In
   some other circumstances CPython also generates an unnecessary 0 offset entry in co_lnotab.
-* Large opargs (using EXTENDED_ARG) and large and negative line number offsets are not well-tested
-  and have some known issues, noted in the code.
+* Large opargs (using EXTENDED_ARG) and large line number offsets are not well-tested and have
+  some known issues, noted in the code.
 
 Links
 -----
 
 * `compile.c source <https://github.com/python/cpython/blob/2.7/Python/compile.c>`_
 * `dis.py source <https://github.com/python/cpython/blob/2.7/Lib/dis.py>`_
-* `lnotab explanation <https://github.com/python/cpython/blob/master/Objects/lnotab_notes.txt>`_
+* `lnotab explanation <https://github.com/python/cpython/blob/2.7/Objects/lnotab_notes.txt>`_
 * `issue 26549 <https://bugs.python.org/issue26549>`_ (cause of some of the issues described above)
 
 Similar modules

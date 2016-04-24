@@ -68,10 +68,6 @@ def _parse_co_lnotab(co):
     current_addr = 0
     current_line = 0
     for addr_incr, line_incr in get_offsets_from_lnotab(co.co_lnotab):
-        # negative values
-        if line_incr >= 0x80:
-            line_incr -= 0x100
-
         new_line = current_line + line_incr
         new_addr = current_addr + addr_incr
 

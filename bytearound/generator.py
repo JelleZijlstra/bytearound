@@ -142,7 +142,6 @@ def generate(ba, pessimize=False):
                 lnotab.append((_BYTE_LIMIT - 1, 0))
                 addr_offset -= _BYTE_LIMIT
             while line_offset >= _BYTE_LIMIT:
-                # TODO this doesn't handle negative offsets correctly (e.g. pydoc.gui)
                 lnotab.append((addr_offset, _BYTE_LIMIT - 1))
                 addr_offset = 0
                 line_offset -= _BYTE_LIMIT
