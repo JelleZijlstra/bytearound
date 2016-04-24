@@ -1,3 +1,5 @@
 *.pyc
 *.sublime-*
 build/
+README.html
+bytearound.egg-info/

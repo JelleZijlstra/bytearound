@@ -18,7 +18,7 @@ def main():
         version=VERSION,
         license='Apache 2.0 license',
         description=DESCRIPTION,
-        long_description=readme
+        long_description=readme,
         author='Jelle Zijlstra',
         author_email='jelle.zijlstra@gmail.com',
         packages=['bytearound'],
