@@ -1,4 +1,4 @@
-__doc__ = """
+"""
 
 bytearound is a library for parsing Python code objects into a more easily modifiable format.
 

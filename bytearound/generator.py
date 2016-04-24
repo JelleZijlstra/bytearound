@@ -1,4 +1,4 @@
-__doc__ = """
+"""
 
 Helpers for generating code objects from bytearound objects.
 
@@ -120,12 +120,12 @@ def generate(ba, pessimize=False):
                     else:
                         names.insert(insert_index, name)
 
-    def _add_op(opcode, oparg):
+    def _add_op(op, oparg):
         extended_arg = oparg / _EXTENDED_ARG_LIMIT
         rest_of_arg = oparg % _EXTENDED_ARG_LIMIT
         if extended_arg > 0:
             _add_op(opcode.EXTENDED_ARG, extended_arg)
-        code.append(instr.opcode)
+        code.append(op)
         code.append(rest_of_arg % _BYTE_LIMIT)
         code.append(rest_of_arg / _BYTE_LIMIT)
 
@@ -157,11 +157,11 @@ def generate(ba, pessimize=False):
             code.append(instr.opcode)
 
     if pessimize and not lnotab:
-            # for one-line generator expressions, CPython generates a nonempty co_lnotab
-            # replicate that behavior here
-            if any(not isinstance(instr, objects.Label) and instr.opcode == ops.FOR_ITER
-                   for instr in ba.instructions):
-                lnotab.append((6, 0))
+        # for one-line generator expressions, CPython generates a nonempty co_lnotab
+        # replicate that behavior here
+        if any(not isinstance(instr, objects.Label) and instr.opcode == ops.FOR_ITER
+               for instr in ba.instructions):
+            lnotab.append((6, 0))
 
     return code, consts, cellvars, freevars, varnames, names, lnotab
 
@@ -290,6 +290,12 @@ stack_effect_map = {opcode.opmap[opname]: value for opname, value in stack_effec
 
 
 def opcode_stack_effect(instr):
+    """Computes the stack effect of a single instruction.
+
+    Based on the CPython function of the same name. Some opcodes have more complicated behavior
+    that is handled in compute_stacksize.
+
+    """
     opcode = instr.opcode
     try:
         return stack_effect_map[opcode]
@@ -304,7 +310,8 @@ def opcode_stack_effect(instr):
         return 1 - instr.oparg
     elif opcode in (ops.RAISE_VARARGS, ops.MAKE_FUNCTION):
         return -instr.oparg
-    elif opcode in (ops.CALL_FUNCTION, ops.CALL_FUNCTION_VAR, ops.CALL_FUNCTION_KW, ops.CALL_FUNCTION_VAR_KW):
+    elif opcode in (ops.CALL_FUNCTION, ops.CALL_FUNCTION_VAR, ops.CALL_FUNCTION_KW,
+                    ops.CALL_FUNCTION_VAR_KW):
         nargs = (((instr.oparg) % _BYTE_LIMIT) + 2*((instr.oparg) / _BYTE_LIMIT))
         if opcode == ops.CALL_FUNCTION:
             return -nargs

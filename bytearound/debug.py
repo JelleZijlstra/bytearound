@@ -1,4 +1,4 @@
-__doc__ = """
+"""
 
 Helpers for debugging and testing code objects.
 
@@ -14,7 +14,7 @@ from . import code_object
 from . import parser
 
 
-_code_object_attributes = sorted(attr for attr in dir(types.CodeType) if not attr.startswith('_'))
+_CODE_OBJECT_ATTRIBUTES = sorted(attr for attr in dir(types.CodeType) if not attr.startswith('_'))
 
 
 def check_recursive(obj, seen=None):
@@ -57,7 +57,7 @@ def check(co):
 
 
 def display_code_object(co):
-    for attr in _code_object_attributes:
+    for attr in _CODE_OBJECT_ATTRIBUTES:
         if attr != 'co_code':
             print attr, repr(getattr(co, attr))
     dis.dis(co)
@@ -66,25 +66,25 @@ def display_code_object(co):
 def compare_code_objects(co1, co2):
     """Compare two code objects for equality, printing out any differences."""
     not_equal = set()
-    for attr in _code_object_attributes:
+    for attr in _CODE_OBJECT_ATTRIBUTES:
         value1 = getattr(co1, attr)
         value2 = getattr(co2, attr)
         if value1 != value2:
-            print('%s is not equal' % attr)
+            print '%s is not equal' % attr
             not_equal.add(attr)
             # maybe do something special for co_lnotab too
             if attr == 'co_code':
                 disassembled1 = _disassemble_to_string(co1).splitlines()
                 disassembled2 = _disassemble_to_string(co2).splitlines()
                 diff = difflib.unified_diff(disassembled1, disassembled2)
-                print(''.join(line + '\n' for line in diff))
+                print ''.join(line + '\n' for line in diff)
             elif attr == 'co_lnotab':
                 disassembled1 = map(str, parser.get_offsets_from_lnotab(value1))
                 disassembled2 = map(str, parser.get_offsets_from_lnotab(value2))
                 diff = difflib.unified_diff(disassembled1, disassembled2)
-                print(''.join(line + '\n' for line in diff))
+                print ''.join(line + '\n' for line in diff)
             else:
-                print('%r != %r' % (value1, value2))
+                print '%r != %r' % (value1, value2)
 
     return len(not_equal) == 0
 

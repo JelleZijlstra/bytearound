@@ -1,13 +1,13 @@
-__doc__ = """
+"""
 
 Helper functions for parsing code objects into bytearound objects.
 
 """
 from collections import defaultdict
-import dis
 import itertools
-import objects
 import opcode
+
+from . import objects
 
 
 def parse(co):
@@ -86,6 +86,7 @@ def _parse_co_lnotab(co):
 
 
 def get_offsets_from_lnotab(lnotab):
+    """Parses an lnotab string into (addr offset, line offset) pairs."""
     for offset in range(0, len(lnotab), 2):
         addr_incr = ord(lnotab[offset])
         line_incr = ord(lnotab[offset + 1])

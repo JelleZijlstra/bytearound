@@ -58,8 +58,6 @@ issues include:
 * The code object for single-line generator expressions like (f(x) for x in y) has a nonempty
   co_lnotab field, but the co_lnotab for a function defined like "def f(x): print(x)" is empty. In
   some other circumstances CPython also generates an unnecessary 0 offset entry in co_lnotab.
-* If a function takes a starargs argument, but does not use it, CPython will include the name args
-  in co_varnames, but bytearound will not.
 * Large opargs (using EXTENDED_ARG) and large and negative line number offsets are not well-tested
   and have some known issues, noted in the code.
 
