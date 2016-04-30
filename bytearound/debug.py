@@ -98,12 +98,12 @@ def compare_code_objects(co1, co2):
                 diff = difflib.unified_diff(disassembled1.splitlines(), disassembled2.splitlines())
                 print ''.join(line + '\n' for line in diff)
             elif attr == 'co_lnotab':
-                simplified1 = _simplify_lnotab(list(parser.get_offsets_from_lnotab(value1)))
-                simplified2 = _simplify_lnotab(list(parser.get_offsets_from_lnotab(value2)))
-                if simplified1 == simplified2:
+                lnotab1 = list(parser.get_offsets_from_lnotab(value1))
+                lnotab2 = list(parser.get_offsets_from_lnotab(value2))
+                if _simplify_lnotab(lnotab1) == _simplify_lnotab(lnotab2):
                     print 'ignoring co_lnotab difference that disappeared after simplification'
                     continue
-                diff = difflib.unified_diff(map(str, simplified1), map(str, simplified2))
+                diff = difflib.unified_diff(map(str, lnotab1), map(str, lnotab2))
                 print ''.join(line + '\n' for line in diff)
             else:
                 print '%r != %r' % (value1, value2)
