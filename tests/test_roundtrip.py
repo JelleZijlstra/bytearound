@@ -1,3 +1,4 @@
+import bytearound
 from bytearound import check
 
 
@@ -41,3 +42,7 @@ def function_that_uses_ints_and_floats():
 
 def test_equal_but_different():
     check(function_that_uses_ints_and_floats)
+
+
+def test_myself():
+    bytearound.check_recursive(bytearound)
