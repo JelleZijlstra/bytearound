@@ -28,7 +28,7 @@ And a simple modification::
         print 'Hello World!'
 
     ba = ByteAround.from_code(f.func_code)
-    for instr in ba.instructions:
+    for instr in ba:
         if instr.oparg == 'Hello World!':
             instr.oparg = 'Goodbye World!'
     f.func_code = ba.to_code()

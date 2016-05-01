@@ -8,6 +8,7 @@ import itertools
 import types
 
 from . import generator
+from .objects import Instruction, Label
 from . import parser
 
 
@@ -112,3 +113,90 @@ class ByteAround(object):
     def is_function(self):
         """Whether this code object is for a function."""
         return self.docstring is not self._not_a_function
+
+    def __setitem__(self, key, value):
+        """Wrapper around writing to self.instructions, to automatically set line numbers.
+
+        The goal is to allow the user to create Instruction objects without having to specify line
+        numbers, and then set the correct line numbers when the users adds them using slice
+        assignment.
+
+        The approach taken here is to use linenos given in the instructions added to the code
+        object if available, and else fall back to the linenos for the instructions that are
+        currently nearest to it in the code object.
+
+        """
+        if isinstance(key, slice):
+            current = self.instructions[key]
+            if len(current) == len(value):
+                specified_lineno = None
+                for i, instr in enumerate(value):
+                    if isinstance(instr, Label):
+                        pass
+                    elif isinstance(instr, Instruction):
+                        if instr.lineno is not None:
+                            specified_lineno = instr.lineno
+                        elif specified_lineno is not None:
+                            instr.lineno = specified_lineno
+                        else:
+                            instr.lineno = _get_nearest_lineno(current, i)
+                    else:
+                        raise TypeError(
+                            'Instructions can only contain Instruction and Label objects, not %s'
+                            % value)
+            else:
+                if len(current) > 0:
+                    specified_lineno = _get_nearest_lineno(current, 0)
+                else:
+                    start_index = 0 if key.start is None else key.start
+                    if start_index < len(self.instructions):
+                        specified_lineno = _get_nearest_lineno(self.instructions, start_index)
+                    else:
+                        specified_lineno = None
+
+                for instr in value:
+                    if isinstance(instr, Label):
+                        pass
+                    elif isinstance(instr, Instruction):
+                        if instr.lineno is not None:
+                            specified_lineno = instr.lineno
+                        elif specified_lineno is not None:
+                            instr.lineno = specified_lineno
+                    else:
+                        raise TypeError(
+                            'Instructions can only contain Instruction and Label objects, not %s'
+                            % instr)
+
+            self.instructions[key] = value
+        else:
+            if isinstance(value, Label):
+                self.instructions[key] = value
+            elif isinstance(value, Instruction):
+                if value.lineno is None:
+                    value.lineno = _get_nearest_lineno(self.instructions, key)
+                self.instructions[key] = value
+            else:
+                raise TypeError(
+                    'Instructions can only contain Instruction and Label objects, not %s' % value)
+
+    def __getitem__(self, key):
+        return self.instructions[key]
+
+    def __iter__(self):
+        return iter(self.instructions)
+
+    def __len__(self):
+        return len(self.instructions)
+
+    def __str__(self):
+        return 'ByteAround(%s)' % self.instructions
+
+    def __repr__(self):
+        return 'ByteAround(%s)' % ', '.join('%s=%r' % p for p in self.__dict__.iteritems())
+
+
+def _get_nearest_lineno(lst, first_index):
+    for elem in itertools.chain(lst[first_index:], reversed(lst[:first_index])):
+        if isinstance(elem, Instruction):
+            return elem.lineno
+    return None
