@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-VERSION = '0.0'
+VERSION = '0.1'
 DESCRIPTION = 'Python module to handle bytecode'
 
 
@@ -23,6 +23,13 @@ def main():
         author_email='jelle.zijlstra@gmail.com',
         packages=['bytearound'],
         url='https://github.com/JelleZijlstra/bytearound',
+        classifiers=[
+            'Development Status :: 3 - Alpha',
+            'Intended Audience :: Developers',
+            'Topic :: Software Development :: Libraries :: Python Modules',
+            'License :: OSI Approved :: Apache Software License',
+            'Programming Language :: Python :: 2.7',
+        ],
     )
 
 
