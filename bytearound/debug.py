@@ -30,11 +30,7 @@ def check_recursive(obj, seen=None):
     except TypeError:
         return  # non-hashable types are not interesting
     if isinstance(obj, types.CodeType):
-        try:
-            check(obj)
-        except AssertionError as e:
-            # TODO figure out if we can fix each minor incompatibility, for now just print
-            print 'failed on %s: %s' % (obj, e)
+        check(obj)
         for constant in obj.co_consts:
             check_recursive(constant, seen=seen)
     else:
@@ -51,7 +47,14 @@ def check_recursive(obj, seen=None):
 
 
 def check(co):
-    """Checks that running ByteAround on the given code object does not change it."""
+    """Checks that running ByteAround on the given code object does not change it.
+
+    This ignores a number of harmless differences that arise when running code through ByteAround,
+    which are detailed in README.rst. It does not currently know how to deal with changes due to
+    optimizations of math operations, so it will fail on functions that include code like
+    "2 ** 32".
+
+    """
     if hasattr(co, 'func_code'):
         co = co.func_code
     assert compare_code_objects(co, code_object.ByteAround.from_code(co).to_code(pessimize=True)), \
@@ -83,10 +86,24 @@ def compare_code_objects(co1, co2):
             print '%s is not equal' % attr
             if attr == 'co_consts' and different_due_to_const_rearrangement:
                 continue
+            if attr == 'co_stacksize':
+                # co_stacksize differences often happen because the peephole optimizer stage that
+                # moves constant tuples into co_consts runs after co_stacksize is computed, so
+                # ignore differences that can be explained by requiring a stack spot for each
+                # tuple element
+                smaller, larger = (co1, co2) if co1.co_stacksize < co2.co_stacksize else (co2, co1)
+                tuples_in_smaller = [obj for obj in smaller.co_consts if isinstance(obj, tuple)]
+                if tuples_in_smaller:
+                    largest_size = max(len(obj) for obj in tuples_in_smaller)
+                    allowed_difference = largest_size - 1
+                    if larger.co_stacksize - smaller.co_stacksize <= allowed_difference:
+                        print 'ignoring co_stacksize difference due to tuple optimization'
+                        continue
             if attr == 'co_code':
                 disassembled1 = _disassemble_to_string(co1)
                 disassembled2 = _disassemble_to_string(co2)
-                if co1.co_consts != co2.co_consts and set(co1.co_consts) == set(co2.co_consts):
+                if co1.co_consts != co2.co_consts and \
+                        _compare_consts(co1.co_consts, co2.co_consts):
                     cleaned1 = _REMOVE_LOAD_CONST_NUM_RGX.sub(
                         'LOAD_CONST               N', disassembled1)
                     cleaned2 = _REMOVE_LOAD_CONST_NUM_RGX.sub(
@@ -95,7 +112,8 @@ def compare_code_objects(co1, co2):
                         print 'ignoring co_code difference due to const rearrangement'
                         different_due_to_const_rearrangement = True
                         continue
-                diff = difflib.unified_diff(disassembled1.splitlines(), disassembled2.splitlines())
+                diff = difflib.unified_diff(disassembled1.splitlines(), disassembled2.splitlines(),
+                                            fromfile='co1', tofile='co2')
                 print ''.join(line + '\n' for line in diff)
             elif attr == 'co_lnotab':
                 lnotab1 = list(parser.get_offsets_from_lnotab(value1))
@@ -103,7 +121,8 @@ def compare_code_objects(co1, co2):
                 if _simplify_lnotab(lnotab1) == _simplify_lnotab(lnotab2):
                     print 'ignoring co_lnotab difference that disappeared after simplification'
                     continue
-                diff = difflib.unified_diff(map(str, lnotab1), map(str, lnotab2))
+                diff = difflib.unified_diff(map(str, lnotab1), map(str, lnotab2),
+                                            fromfile='co1', tofile='co2')
                 print ''.join(line + '\n' for line in diff)
             else:
                 print '%r != %r' % (value1, value2)
@@ -161,9 +180,27 @@ def _simplify_lnotab(pairs):
     prev_pair = None
     new_pairs = []
     for pair in pairs:
-        if prev_pair is not None and pair[1] == 0 and pair[0] + prev_pair[0] < 256:
-            new_pairs[-1] = (pair[0] + prev_pair[0], prev_pair[1])
+        if prev_pair is not None and prev_pair[1] == 0 and pair[0] + prev_pair[0] < 256:
+            new_pairs[-1] = (pair[0] + prev_pair[0], pair[1] + prev_pair[1])
         else:
             new_pairs.append(pair)
         prev_pair = pair
+    if new_pairs and new_pairs[-1][1] == 0:
+        new_pairs = new_pairs[:-1]
     return new_pairs
+
+
+def _compare_consts(consts1, consts2):
+    """Compare two co_consts tuples.
+
+    co_consts often ends up slightly different due to some rearrangents and the constant tuple
+    peephole optimization. We attempt to ignore such differences.
+
+    """
+    consts1 = set(consts1)
+    consts2 = set(consts2)
+    for collection in (consts1, consts2):
+        for elem in list(collection):
+            if isinstance(elem, tuple):
+                collection.update(elem)
+    return consts1 == consts2
