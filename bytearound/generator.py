@@ -36,10 +36,6 @@ def generate(ba, pessimize=False):
         elif instr.opcode in opcode.hasconst:
             constant = instr.oparg
             if pessimize:
-                if isinstance(constant, tuple):
-                    for item in constant:
-                        consts.add(item)
-                    consts_to_move.add(constant)
                 if constant is None and not (ba.is_function() and consts.objs[0] is None):
                     consts_to_move.add(constant)
             return consts.add(constant)

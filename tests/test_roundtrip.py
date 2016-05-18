@@ -1,3 +1,4 @@
+import bytearound
 from bytearound import check
 
 
@@ -54,3 +55,7 @@ def function_with_jumps():
 
 def test_jumps():
     check(function_with_jumps)
+
+
+def test_myself():
+    bytearound.check_recursive(bytearound)

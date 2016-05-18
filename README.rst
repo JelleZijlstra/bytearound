@@ -2,8 +2,10 @@
 bytearound
 **********
 
-bytearound is a module for handling CPython 2.7.11 bytecode. It provides a representation
-of bytecode that is easier to modify, create, and inspect than CPython's internal representation.
+bytearound is a module for assembling and disassembling CPython 2.7.11 bytecode. It provides a
+representation of bytecode that is easier to modify, create, and inspect than CPython's internal
+representation and functionality for going back and forth between this representation and CPython
+code objects.
 
 An example of how to create code::
 
@@ -26,7 +28,7 @@ And a simple modification::
         print 'Hello World!'
 
     ba = ByteAround.from_code(f.func_code)
-    for instr in ba.instructions:
+    for instr in ba:
         if instr.oparg == 'Hello World!':
             instr.oparg = 'Goodbye World!'
     f.func_code = ba.to_code()
@@ -42,14 +44,16 @@ give an identical code object. Ensuring that this invariant holds makes it easie
 Unfortunately, there are a number of quirks in the way that CPython generates code objects that
 turn out to be hard to replicate. To replicate some of these, I added a ``pessimize=`` argument to
 ``ByteAround.to_code`` that attempts to faithfully replicate CPython even when not doing so would
-be a little more efficient. However, it may not turn out to be possible to do this fully. Known
-issues include:
+be a little more efficient, and I created a custom comparison function that ignores a few other
+known issues. However, it may not turn out to be possible to remove all minor differences using
+these approaches. Known issues include:
 
 * CPython computes some parts of the code object before it runs the peephole optimizer, which can
   cause co_stacksize to be too high (because the peephole optimizer can turn a series of opcodes
   building a tuple into a single LOAD_CONST opcode). The same issue can also affect the ordering
   of the co_consts field, apparently because the optimizer adds new constants to the end of the
-  list.
+  list. Similarly, mathematical operations on constants (e.g. 2 ** 32) may be optimized away by the
+  peephole optimizer, possibly leaving behind unnecessary constants.
 * When singleton objects like None and True are used in a function, CPython adds their name to the
   co_names field (unnecessarily, because the objects are loaded directly with LOAD_CONST) and adds
   the constants to the end of the co_consts list. (Normally, co_consts includes constants in order
