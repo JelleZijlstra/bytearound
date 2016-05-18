@@ -54,8 +54,8 @@ class Label(Instruction):
     """
     opcode = _LABEL
 
-    def __init__(self, i):
-        super(Instruction, self).__init__()
+    def __init__(self, i=None):
+        super(Label, self).__init__()
         # index is just for ease of reference, Labels should always be compared by identity
         self.i = i
 
