@@ -8,7 +8,7 @@ import itertools
 import types
 
 from . import generator
-from .objects import Instruction, Label
+from .ops import Instruction, Label
 from . import parser
 
 
@@ -136,9 +136,7 @@ class ByteAround(object):
             if len(current) == len(value):
                 specified_lineno = None
                 for i, instr in enumerate(value):
-                    if isinstance(instr, Label):
-                        pass
-                    elif isinstance(instr, Instruction):
+                    if isinstance(instr, Instruction):
                         if instr.lineno is not None:
                             specified_lineno = instr.lineno
                         elif specified_lineno is not None:
@@ -160,9 +158,7 @@ class ByteAround(object):
                         specified_lineno = None
 
                 for instr in value:
-                    if isinstance(instr, Label):
-                        pass
-                    elif isinstance(instr, Instruction):
+                    if isinstance(instr, Instruction):
                         if instr.lineno is not None:
                             specified_lineno = instr.lineno
                         elif specified_lineno is not None:
@@ -202,6 +198,6 @@ class ByteAround(object):
 
 def _get_nearest_lineno(lst, first_index):
     for elem in itertools.chain(lst[first_index:], reversed(lst[:first_index])):
-        if isinstance(elem, Instruction):
+        if not isinstance(elem, Label):
             return elem.lineno
     return None
