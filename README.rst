@@ -12,11 +12,11 @@ An example of how to create code::
     from bytearound import ByteAround, Instruction, ops
 
     ba = ByteAround([
-        Instruction(ops.LOAD_CONST, 'Hello World!'),
-        Instruction(ops.PRINT_ITEM),
-        Instruction(ops.PRINT_NEWLINE),
-        Instruction(ops.LOAD_CONST, None),
-        Instruction(ops.RETURN_VALUE),
+        ops.LOAD_CONST('Hello World!'),
+        ops.PRINT_ITEM(),
+        ops.PRINT_NEWLINE(),
+        ops.LOAD_CONST(None),
+        ops.RETURN_VALUE(),
     ])
     exec(ba.to_code())
 

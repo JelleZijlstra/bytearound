@@ -22,7 +22,7 @@ class Instruction(object):
     """A single bytecode instruction."""
     opcode = None  # subclasses should override
 
-    def __init__(self, opcode=None, oparg=None, lineno=0):
+    def __init__(self, oparg=None, lineno=0):
         self.oparg = oparg
         self.lineno = lineno
 
@@ -33,12 +33,6 @@ class Instruction(object):
         if not isinstance(other, Instruction):
             return NotImplemented
         return self.opcode == other.opcode and self.oparg == other.oparg and self.lineno == other.lineno
-
-    def __new__(typ, opcode=None, oparg=None, lineno=0):
-        if typ is not Instruction:
-            return super(Instruction, typ).__new__(typ)
-        else:
-            return typ.make(opcode, oparg=oparg, lineno=lineno)
 
     @classmethod
     def make(cls, opcode, oparg=None, lineno=0):
