@@ -8,16 +8,10 @@ from collections import namedtuple
 from itertools import islice
 import opcode
 
-from . import objects
+from . import ops
 
 _EXTENDED_ARG_LIMIT = 65536
 _BYTE_LIMIT = 256
-
-
-class ops(object):
-    """Pseudo-enum of opcodes for ease of reference."""
-    for name, value in opcode.opmap.iteritems():
-        locals()[name] = value
 
 
 def generate(ba, pessimize=False):
@@ -51,7 +45,7 @@ def generate(ba, pessimize=False):
             return consts.add(constant)
         elif instr.opcode in opcode.hasfree:
             name, kind = instr.oparg
-            if kind == objects.cell_or_free.cell:
+            if kind == ops.cell_or_free.cell:
                 return _get_or_add(cellvars, name)
             else:
                 freevar_idx = _get_or_add(freevars, name)
@@ -82,13 +76,13 @@ def generate(ba, pessimize=False):
     # this is complicated by the fact that we can't know beforehand whether we'll need
     # EXTENDED_ARG, especially for jump offsets
     for instr in ba.instructions:
-        if isinstance(instr, objects.Label):
+        if isinstance(instr, ops.Label):
             instrs_with_offsets.append((current_offset, instr))
             continue
         offset = current_offset
         current_offset += 1
 
-        if instr.opcode >= opcode.HAVE_ARGUMENT:
+        if instr.has_argument():
             current_offset += 2
             oparg = _get_oparg(instr, current_offset)
             while oparg >= _EXTENDED_ARG_LIMIT:
@@ -102,7 +96,7 @@ def generate(ba, pessimize=False):
     freevars = sorted(freevars)
 
     for current_offset, instr in instrs_with_offsets:
-        if isinstance(instr, objects.Label):
+        if isinstance(instr, ops.Label):
             label_to_offset[instr] = current_offset
 
     if pessimize:
@@ -131,7 +125,7 @@ def generate(ba, pessimize=False):
     prev_lineno = prev_addr = 0
 
     for current_offset, instr in instrs_with_offsets:
-        if isinstance(instr, objects.Label):
+        if isinstance(instr, ops.Label):
             continue
         if instr.lineno != prev_lineno:
             addr_offset = current_offset - prev_addr
@@ -148,7 +142,7 @@ def generate(ba, pessimize=False):
             prev_lineno = instr.lineno
             prev_addr = current_offset
 
-        if instr.opcode >= opcode.HAVE_ARGUMENT:
+        if instr.has_argument():
             _add_op(instr.opcode, _get_oparg(instr, current_offset + 3))
         else:
             code.append(instr.opcode)
@@ -156,8 +150,7 @@ def generate(ba, pessimize=False):
     if pessimize and not lnotab:
         # for one-line generator expressions, CPython generates a nonempty co_lnotab
         # replicate that behavior here
-        if any(not isinstance(instr, objects.Label) and instr.opcode == ops.FOR_ITER
-               for instr in ba.instructions):
+        if any(isinstance(instr, ops.FOR_ITER) for instr in ba.instructions):
             lnotab.append((6, 0))
 
     return code, consts.as_tuple(), cellvars, freevars, varnames, names, lnotab
@@ -321,34 +314,35 @@ def opcode_stack_effect(instr):
 
     """
     opcode = instr.opcode
+    instr_typ = type(instr)
     try:
         return stack_effect_map[opcode]
     except KeyError:
         pass
 
-    if opcode == ops.UNPACK_SEQUENCE:
+    if instr_typ is ops.UNPACK_SEQUENCE:
         return instr.oparg - 1
-    elif opcode == ops.DUP_TOPX:
+    elif instr_typ is ops.DUP_TOPX:
         return instr.oparg
-    elif opcode in (ops.BUILD_TUPLE, ops.BUILD_LIST, ops.BUILD_SET):
+    elif instr_typ in (ops.BUILD_TUPLE, ops.BUILD_LIST, ops.BUILD_SET):
         return 1 - instr.oparg
-    elif opcode in (ops.RAISE_VARARGS, ops.MAKE_FUNCTION):
+    elif instr_typ in (ops.RAISE_VARARGS, ops.MAKE_FUNCTION):
         return -instr.oparg
-    elif opcode in (ops.CALL_FUNCTION, ops.CALL_FUNCTION_VAR, ops.CALL_FUNCTION_KW,
-                    ops.CALL_FUNCTION_VAR_KW):
-        nargs = (((instr.oparg) % _BYTE_LIMIT) + 2*((instr.oparg) / _BYTE_LIMIT))
-        if opcode == ops.CALL_FUNCTION:
+    elif instr_typ in (ops.CALL_FUNCTION, ops.CALL_FUNCTION_VAR, ops.CALL_FUNCTION_KW,
+                       ops.CALL_FUNCTION_VAR_KW):
+        nargs = (((instr.oparg) % _BYTE_LIMIT) + 2 * ((instr.oparg) / _BYTE_LIMIT))
+        if instr_typ == ops.CALL_FUNCTION:
             return -nargs
-        elif opcode == ops.CALL_FUNCTION_VAR_KW:
+        elif instr_typ == ops.CALL_FUNCTION_VAR_KW:
             return -nargs - 2
         else:
             return -nargs - 1
-    elif opcode == ops.BUILD_SLICE:
+    elif instr_typ == ops.BUILD_SLICE:
         if instr.oparg == 3:
             return -2
         else:
             return -1
-    elif opcode == ops.MAKE_CLOSURE:
+    elif instr_typ == ops.MAKE_CLOSURE:
         return -instr.oparg - 1
     raise ValueError('cannot compute stack effect for opcode %s' % instr)
 
@@ -367,7 +361,7 @@ def compute_stacksize(ba):
     seen_blocks = set()
 
     for i, instr in enumerate(ba.instructions):
-        if isinstance(instr, objects.Label):
+        if isinstance(instr, ops.Label):
             block = Block(i)
             label_to_block[instr] = block
             idx_to_block[i] = block
@@ -391,7 +385,7 @@ def compute_stacksize(ba):
         max_depth = 0
 
         for i, instr in islice(enumerate(ba.instructions), block.begin_idx, None):
-            if isinstance(instr, objects.Label):
+            if isinstance(instr, ops.Label):
                 continue
             depth += opcode_stack_effect(instr)
             if depth > max_depth:
@@ -411,9 +405,9 @@ def compute_stacksize(ba):
             # This is based on stackdepth_walk() in CPython's compile.c.
             if instr.is_jump():
                 # change in depth to apply to the depth from the target block
-                if instr.opcode == ops.FOR_ITER:
+                if isinstance(instr, ops.FOR_ITER):
                     target_depth_delta = -2
-                elif instr.opcode in (ops.SETUP_FINALLY, ops.SETUP_EXCEPT):
+                elif isinstance(instr, (ops.SETUP_FINALLY, ops.SETUP_EXCEPT)):
                     target_depth_delta = 3
                 else:
                     target_depth_delta = 0
@@ -422,8 +416,8 @@ def compute_stacksize(ba):
 
                 target_block = label_to_block[instr.oparg]
                 target_depth = target_depth_delta + cached_stack_effect_of_block(target_block)
-                if instr.opcode not in (ops.JUMP_ABSOLUTE, ops.JUMP_FORWARD):
-                    if instr.opcode in (ops.JUMP_IF_TRUE_OR_POP, ops.JUMP_IF_FALSE_OR_POP):
+                if not isinstance(instr, (ops.JUMP_ABSOLUTE, ops.JUMP_FORWARD)):
+                    if isinstance(instr, (ops.JUMP_IF_TRUE_OR_POP, ops.JUMP_IF_FALSE_OR_POP)):
                         continuation_depth_delta = -1
                     else:
                         continuation_depth_delta = 0

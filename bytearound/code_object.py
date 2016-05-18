@@ -76,6 +76,11 @@ class ByteAround(object):
             co.co_firstlineno, pessimized_names
         )
 
+    @classmethod
+    def from_function(cls, fn):
+        """Creates a ByteAround object from a function."""
+        return cls.from_code(fn.func_code, is_function=True)
+
     def to_code(self, pessimize=False):
         """Computes a code object from this object.
 

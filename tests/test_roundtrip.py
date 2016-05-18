@@ -41,3 +41,16 @@ def function_that_uses_ints_and_floats():
 
 def test_equal_but_different():
     check(function_that_uses_ints_and_floats)
+
+
+def function_with_jumps():
+    for x in [1, 2, 3]:
+        if x == 2:
+            continue
+        else:
+            break
+        print 4
+
+
+def test_jumps():
+    check(function_with_jumps)

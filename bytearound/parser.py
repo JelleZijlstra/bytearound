@@ -7,7 +7,7 @@ from collections import defaultdict
 import itertools
 import opcode
 
-from . import objects
+from . import ops
 
 
 def parse(co):
@@ -17,7 +17,7 @@ def parse(co):
     code_len = len(code)
     offset_to_instr = {}
     offset_to_label = defaultdict()
-    offset_to_label.default_factory = lambda: objects.Label(len(offset_to_label))
+    offset_to_label.default_factory = lambda: ops.Label(len(offset_to_label))
     extended_arg = 0
     free_vars = co.co_cellvars + co.co_freevars
 
@@ -43,9 +43,9 @@ def parse(co):
                 varname = free_vars[raw_oparg]
                 # store whether this is a cellvar or a freevar
                 if raw_oparg < len(co.co_cellvars):
-                    kind = objects.cell_or_free.cell
+                    kind = ops.cell_or_free.cell
                 else:
-                    kind = objects.cell_or_free.free
+                    kind = ops.cell_or_free.free
                 oparg = varname, kind
             elif op in opcode.hasjabs:
                 oparg = offset_to_label[raw_oparg]
@@ -58,8 +58,12 @@ def parse(co):
             else:
                 oparg = raw_oparg
 
-        offset_to_instr[i] = objects.Instruction(op, oparg, lineno)
-    return [p[1] for p in sorted(itertools.chain(offset_to_instr.items(), offset_to_label.items()))]
+        offset_to_instr[i] = ops.Instruction.make(op, oparg, lineno)
+
+    return [p[1] for p in sorted(
+        itertools.chain(offset_to_instr.items(), offset_to_label.items()),
+        key=lambda item: item[0]
+    )]
 
 
 def _parse_co_lnotab(co):
