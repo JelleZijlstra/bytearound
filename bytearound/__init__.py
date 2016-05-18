@@ -3,7 +3,7 @@
 bytearound is a library for parsing Python code objects into a more easily modifiable format.
 
 """
-__version__ = '0.1'
+__version__ = '0.2'
 
 from .code_object import ByteAround
 from .debug import check, check_recursive
