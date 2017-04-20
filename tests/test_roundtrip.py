@@ -50,7 +50,7 @@ def function_with_jumps():
             continue
         else:
             break
-        print 4
+        print(4)
 
 
 def test_jumps():

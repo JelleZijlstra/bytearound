@@ -299,7 +299,32 @@ stack_effect_map = {
     'WITH_CLEANUP': -1,
     'YIELD_VALUE': 0,
 }
-stack_effect_map = {opcode.opmap[opname]: value for opname, value in stack_effect_map.iteritems()}
+# These are handled specially in opcode_stack_effect below
+_SPECIAL_STACK_EFFECT_OPCODES = {op.opcode for op in {
+    ops.UNPACK_SEQUENCE,
+    ops.DUP_TOPX,
+    ops.BUILD_TUPLE,
+    ops.BUILD_LIST,
+    ops.BUILD_SET,
+    ops.RAISE_VARARGS,
+    ops.MAKE_FUNCTION,
+    ops.CALL_FUNCTION,
+    ops.CALL_FUNCTION_VAR,
+    ops.CALL_FUNCTION_KW,
+    ops.CALL_FUNCTION_VAR_KW,
+    ops.BUILD_SLICE,
+    ops.MAKE_CLOSURE,
+    ops.STOP_CODE,  # Never emitted
+}}
+stack_effect_map = {opcode.opmap[opname]: value for opname, value in stack_effect_map.items()}
+
+_extra_ops = sorted(set(stack_effect_map) - set(opcode.opmap.values()))
+_missing_ops = sorted(
+    name for name, value in opcode.opmap.items()
+    if value not in stack_effect_map and value not in _SPECIAL_STACK_EFFECT_OPCODES)
+if _extra_ops or _missing_ops:
+    raise RuntimeError(
+        'missing or extra ops, extra={} missing={}'.format(_extra_ops, _missing_ops))
 
 
 def opcode_stack_effect(instr):

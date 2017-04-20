@@ -56,7 +56,8 @@ class Label(Instruction):
 
     def __init__(self, i=None):
         super(Label, self).__init__()
-        # index is just for ease of reference, Labels should always be compared by identity
+        # index is just for ease of reference, Labels should always be compared
+        # by identity
         self.i = i
 
     def __repr__(self):
@@ -65,7 +66,7 @@ class Label(Instruction):
 _OPCODE_TO_CLS[_LABEL] = Label
 
 
-for name, value in opcode.opmap.iteritems():
+for name, value in opcode.opmap.items():
     name = name.replace('+', '_')
     cls = type(name, (Instruction,), {
         'opcode': value
