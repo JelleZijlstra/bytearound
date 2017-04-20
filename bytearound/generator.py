@@ -7,6 +7,7 @@ Helpers for generating code objects from bytearound objects.
 from collections import namedtuple
 from itertools import islice
 import opcode
+import sys
 
 from . import ops
 
@@ -211,7 +212,6 @@ def build_stack_effect_map():
         'BINARY_XOR': -1,
         'BREAK_LOOP': 0,
         'BUILD_CLASS': -2,
-        'BUILD_MAP': 1,
         'COMPARE_OP': -1,
         'CONTINUE_LOOP': 0,
         'DELETE_ATTR': -1,
@@ -258,6 +258,8 @@ def build_stack_effect_map():
         'JUMP_IF_TRUE_OR_POP': 0,
         'LIST_APPEND': -1,
         'LOAD_ATTR': 0,
+        'LOAD_BUILD_CLASS': 1,
+        'LOAD_CLASSDEREF': 1,
         'LOAD_CLOSURE': 1,
         'LOAD_CONST': 1,
         'LOAD_DEREF': 1,
@@ -268,6 +270,7 @@ def build_stack_effect_map():
         'MAP_ADD': -2,
         'NOP': 0,  # not listed in C
         'POP_BLOCK': 0,
+        'POP_EXCEPT': 0,  # or something else? C comment is unclear
         'POP_JUMP_IF_FALSE': -1,
         'POP_JUMP_IF_TRUE': -1,
         'POP_TOP': -1,
@@ -280,6 +283,7 @@ def build_stack_effect_map():
         'ROT_FOUR': 0,
         'ROT_THREE': 0,
         'ROT_TWO': 0,
+        'SETUP_ASYNC_WITH': 0,
         'SETUP_EXCEPT': 0,
         'SETUP_FINALLY': 0,
         'SETUP_LOOP': 0,
@@ -307,6 +311,9 @@ def build_stack_effect_map():
         'UNARY_NOT': 0,
         'UNARY_POSITIVE': 0,
         'WITH_CLEANUP': -1,
+        'WITH_CLEANUP_FINISH': -1,  # comments say "sometimes more"
+        'WITH_CLEANUP_START': 1,
+        'YIELD_FROM': -1,
         'YIELD_VALUE': 0,
     }
     return {opcode.opmap[opname]: value for opname, value in stack_effect_map.items()
@@ -343,6 +350,15 @@ def build_stack_effect_func_map():
 
     for op in build_opcodes:
         stack_effect_func_map[op] = lambda instr: 1 - instr.oparg
+
+    if sys.version_info < (3, 0):
+        stack_effect_func_map[ops.BUILD_MAP] = lambda instr: 1
+    else:
+        stack_effect_func_map[ops.BUILD_MAP] = lambda instr: 1 - 2 * instr.oparg
+    if hasattr(ops, 'BUILD_MAP_UNPACK_WITH_CALL'):
+        stack_effect_func_map[ops.BUILD_MAP_UNPACK_WITH_CALL] = lambda instr: 1 - instr.oparg & 0xFF
+    if hasattr(ops, 'UNPACK_EX'):
+        stack_effect_func_map[ops.UNPACK_EX] = lambda instr: instr.oparg & 0xFF + instr.oparg >> 8
 
     for op in (ops.CALL_FUNCTION, ops.CALL_FUNCTION_VAR, ops.CALL_FUNCTION_KW,
                ops.CALL_FUNCTION_VAR_KW):
