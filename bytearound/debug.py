@@ -3,6 +3,7 @@
 Helpers for debugging and testing code objects.
 
 """
+from __future__ import print_function
 
 import contextlib
 import difflib
@@ -64,7 +65,7 @@ def check(co):
 def display_code_object(co):
     for attr in _CODE_OBJECT_ATTRIBUTES:
         if attr != 'co_code':
-            print attr, repr(getattr(co, attr))
+            print(attr, repr(getattr(co, attr)))
     dis.dis(co)
 
 
@@ -83,7 +84,7 @@ def compare_code_objects(co1, co2):
         value1 = getattr(co1, attr)
         value2 = getattr(co2, attr)
         if value1 != value2:
-            print '%s is not equal' % attr
+            print('%s is not equal' % attr)
             if attr == 'co_consts' and different_due_to_const_rearrangement:
                 continue
             if attr == 'co_stacksize':
@@ -97,7 +98,7 @@ def compare_code_objects(co1, co2):
                     largest_size = max(len(obj) for obj in tuples_in_smaller)
                     allowed_difference = largest_size - 1
                     if larger.co_stacksize - smaller.co_stacksize <= allowed_difference:
-                        print 'ignoring co_stacksize difference due to tuple optimization'
+                        print('ignoring co_stacksize difference due to tuple optimization')
                         continue
             if attr == 'co_code':
                 disassembled1 = _disassemble_to_string(co1)
@@ -109,23 +110,23 @@ def compare_code_objects(co1, co2):
                     cleaned2 = _REMOVE_LOAD_CONST_NUM_RGX.sub(
                         'LOAD_CONST               N', disassembled2)
                     if cleaned1 == cleaned2:
-                        print 'ignoring co_code difference due to const rearrangement'
+                        print('ignoring co_code difference due to const rearrangement')
                         different_due_to_const_rearrangement = True
                         continue
                 diff = difflib.unified_diff(disassembled1.splitlines(), disassembled2.splitlines(),
                                             fromfile='co1', tofile='co2')
-                print ''.join(line + '\n' for line in diff)
+                print(''.join(line + '\n' for line in diff))
             elif attr == 'co_lnotab':
                 lnotab1 = list(parser.get_offsets_from_lnotab(value1))
                 lnotab2 = list(parser.get_offsets_from_lnotab(value2))
                 if _simplify_lnotab(lnotab1) == _simplify_lnotab(lnotab2):
-                    print 'ignoring co_lnotab difference that disappeared after simplification'
+                    print('ignoring co_lnotab difference that disappeared after simplification')
                     continue
                 diff = difflib.unified_diff(map(str, lnotab1), map(str, lnotab2),
                                             fromfile='co1', tofile='co2')
-                print ''.join(line + '\n' for line in diff)
+                print(''.join(line + '\n' for line in diff))
             else:
-                print '%r != %r' % (value1, value2)
+                print('%r != %r' % (value1, value2))
             not_equal.add(attr)
 
     return len(not_equal) == 0
@@ -145,7 +146,7 @@ def _capture_stdout():
     Usage:
 
     with _capture_stdout() as f:
-        print 'hello'
+        print('hello')
 
     output = f.read()  # "hello\n"
 
