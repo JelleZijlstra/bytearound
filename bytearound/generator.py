@@ -226,7 +226,7 @@ def build_stack_effect_map():
         'DELETE_SUBSCR': -2,
         'DUP_TOP': 1,
         'DUP_TOP_TWO': 2,
-        'END_FINALLY': -3,
+        'END_FINALLY': -3 if sys.version_info < (3, 0) else -1,
         'EXEC_STMT': -3,
         'EXTENDED_ARG': 0,  # not listed in C
         'FOR_ITER': 1,
@@ -284,10 +284,10 @@ def build_stack_effect_map():
         'ROT_THREE': 0,
         'ROT_TWO': 0,
         'SETUP_ASYNC_WITH': 0,
-        'SETUP_EXCEPT': 0,
-        'SETUP_FINALLY': 0,
+        'SETUP_EXCEPT': 0 if sys.version_info < (3, 0) else 6,
+        'SETUP_FINALLY': 0 if sys.version_info < (3, 0) else 6,
         'SETUP_LOOP': 0,
-        'SETUP_WITH': 4,
+        'SETUP_WITH': 4 if sys.version_info < (3, 0) else 7,
         'SET_ADD': -1,
         'SLICE+0': 0,
         'SLICE+1': -1,
@@ -320,25 +320,38 @@ def build_stack_effect_map():
             if opname in opcode.opmap}
 
 
+if sys.version_info < (3, 0):
+    def nargs(oparg):
+        return (((oparg) % _BYTE_LIMIT) + 2 * ((oparg) / _BYTE_LIMIT))
+else:
+    def nargs(oparg):
+        return (((oparg) % _BYTE_LIMIT) + 2 * (((oparg) / _BYTE_LIMIT)) % _BYTE_LIMIT)
+
+
 def compute_func_opcode_stack_effect(instr):
     instr_typ = type(instr)
-    nargs = (((instr.oparg) % _BYTE_LIMIT) + 2 * ((instr.oparg) / _BYTE_LIMIT))
     if instr_typ == ops.CALL_FUNCTION:
-        return -nargs
+        return -nargs(instr.oparg)
     elif instr_typ == ops.CALL_FUNCTION_VAR_KW:
-        return -nargs - 2
+        return -nargs(instr.oparg) - 2
     else:
-        return -nargs - 1
+        return -nargs(instr.oparg) - 1
 
 
 def build_stack_effect_func_map():
     stack_effect_func_map = {
         ops.UNPACK_SEQUENCE: lambda instr: instr.oparg - 1,
         ops.RAISE_VARARGS: lambda instr: -instr.oparg,
-        ops.MAKE_FUNCTION: lambda instr: -instr.oparg,
-        ops.MAKE_CLOSURE: lambda instr: -instr.oparg - 1,
         ops.BUILD_SLICE: lambda instr: -2 if instr.oparg == 3 else -1,
     }
+    if sys.version_info < (3, 0):
+        stack_effect_func_map[ops.MAKE_FUNCTION] = lambda instr: -instr.oparg
+        stack_effect_func_map[ops.MAKE_CLOSURE] = lambda instr: -instr.oparg - 1
+    else:
+        stack_effect_func_map[ops.MAKE_FUNCTION] = \
+            lambda instr: -1 - nargs(instr.oparg) -  ((instr.oparg >> 16) & 0xffff)
+        stack_effect_func_map[ops.MAKE_CLOSURE] = \
+            lambda instr: -2 - nargs(instr.oparg) -  ((instr.oparg >> 16) & 0xffff)
     if hasattr(ops, 'DUP_TOPX'):
         stack_effect_func_map[ops.DUP_TOPX] = lambda instr: instr.oparg
 
