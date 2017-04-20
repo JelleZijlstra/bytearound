@@ -191,115 +191,166 @@ class _ConstsList(object):
 # Based heavily on CPython's code in compile.c (functions stackdepth, stackdepth_walk, and
 # opcode_stack_effect).
 
-stack_effect_map = {
-    'BINARY_ADD': -1,
-    'BINARY_AND': -1,
-    'BINARY_DIVIDE': -1,
-    'BINARY_FLOOR_DIVIDE': -1,
-    'BINARY_LSHIFT': -1,
-    'BINARY_MODULO': -1,
-    'BINARY_MULTIPLY': -1,
-    'BINARY_OR': -1,
-    'BINARY_POWER': -1,
-    'BINARY_RSHIFT': -1,
-    'BINARY_SUBSCR': -1,
-    'BINARY_SUBTRACT': -1,
-    'BINARY_TRUE_DIVIDE': -1,
-    'BINARY_XOR': -1,
-    'BREAK_LOOP': 0,
-    'BUILD_CLASS': -2,
-    'BUILD_MAP': 1,
-    'COMPARE_OP': -1,
-    'CONTINUE_LOOP': 0,
-    'DELETE_ATTR': -1,
-    'DELETE_FAST': 0,
-    'DELETE_GLOBAL': 0,
-    'DELETE_NAME': 0,
-    'DELETE_SLICE+0': -1,
-    'DELETE_SLICE+1': -2,
-    'DELETE_SLICE+2': -2,
-    'DELETE_SLICE+3': -3,
-    'DELETE_SUBSCR': -2,
-    'DUP_TOP': 1,
-    'END_FINALLY': -3,
-    'EXEC_STMT': -3,
-    'EXTENDED_ARG': 0,  # not listed in C
-    'FOR_ITER': 1,
-    'GET_ITER': 0,
-    'IMPORT_FROM': 1,
-    'IMPORT_NAME': -1,
-    'IMPORT_STAR': -1,
-    'INPLACE_ADD': -1,
-    'INPLACE_AND': -1,
-    'INPLACE_DIVIDE': -1,
-    'INPLACE_FLOOR_DIVIDE': -1,
-    'INPLACE_LSHIFT': -1,
-    'INPLACE_MODULO': -1,
-    'INPLACE_MULTIPLY': -1,
-    'INPLACE_OR': -1,
-    'INPLACE_POWER': -1,
-    'INPLACE_RSHIFT': -1,
-    'INPLACE_SUBTRACT': -1,
-    'INPLACE_TRUE_DIVIDE': -1,
-    'INPLACE_XOR': -1,
-    'JUMP_ABSOLUTE': 0,
-    'JUMP_FORWARD': 0,
-    'JUMP_IF_FALSE_OR_POP': 0,
-    'JUMP_IF_TRUE_OR_POP': 0,
-    'LIST_APPEND': -1,
-    'LOAD_ATTR': 0,
-    'LOAD_CLOSURE': 1,
-    'LOAD_CONST': 1,
-    'LOAD_DEREF': 1,
-    'LOAD_FAST': 1,
-    'LOAD_GLOBAL': 1,
-    'LOAD_LOCALS': 1,
-    'LOAD_NAME': 1,
-    'MAP_ADD': -2,
-    'NOP': 0,  # not listed in C
-    'POP_BLOCK': 0,
-    'POP_JUMP_IF_FALSE': -1,
-    'POP_JUMP_IF_TRUE': -1,
-    'POP_TOP': -1,
-    'PRINT_EXPR': -1,
-    'PRINT_ITEM': -1,
-    'PRINT_ITEM_TO': -2,
-    'PRINT_NEWLINE': 0,
-    'PRINT_NEWLINE_TO': -1,
-    'RETURN_VALUE': -1,
-    'ROT_FOUR': 0,
-    'ROT_THREE': 0,
-    'ROT_TWO': 0,
-    'SETUP_EXCEPT': 0,
-    'SETUP_FINALLY': 0,
-    'SETUP_LOOP': 0,
-    'SETUP_WITH': 4,
-    'SET_ADD': -1,
-    'SLICE+0': 0,
-    'SLICE+1': -1,
-    'SLICE+2': -1,
-    'SLICE+3': -2,
-    # 'STOP_CODE': ,  # omitted, never emitted
-    'STORE_ATTR': -2,
-    'STORE_DEREF': -1,
-    'STORE_FAST': -1,
-    'STORE_GLOBAL': -1,
-    'STORE_MAP': -2,
-    'STORE_NAME': -1,
-    'STORE_SLICE+0': -2,
-    'STORE_SLICE+1': -3,
-    'STORE_SLICE+2': -3,
-    'STORE_SLICE+3': -4,
-    'STORE_SUBSCR': -3,
-    'UNARY_CONVERT': 0,
-    'UNARY_INVERT': 0,
-    'UNARY_NEGATIVE': 0,
-    'UNARY_NOT': 0,
-    'UNARY_POSITIVE': 0,
-    'WITH_CLEANUP': -1,
-    'YIELD_VALUE': 0,
-}
-stack_effect_map = {opcode.opmap[opname]: value for opname, value in stack_effect_map.items()}
+def build_stack_effect_map():
+    stack_effect_map = {
+        'BEFORE_ASYNC_WITH': 1,
+        'BINARY_ADD': -1,
+        'BINARY_AND': -1,
+        'BINARY_DIVIDE': -1,
+        'BINARY_FLOOR_DIVIDE': -1,
+        'BINARY_LSHIFT': -1,
+        'BINARY_MATRIX_MULTIPLY': -1,
+        'BINARY_MODULO': -1,
+        'BINARY_MULTIPLY': -1,
+        'BINARY_OR': -1,
+        'BINARY_POWER': -1,
+        'BINARY_RSHIFT': -1,
+        'BINARY_SUBSCR': -1,
+        'BINARY_SUBTRACT': -1,
+        'BINARY_TRUE_DIVIDE': -1,
+        'BINARY_XOR': -1,
+        'BREAK_LOOP': 0,
+        'BUILD_CLASS': -2,
+        'BUILD_MAP': 1,
+        'COMPARE_OP': -1,
+        'CONTINUE_LOOP': 0,
+        'DELETE_ATTR': -1,
+        'DELETE_DEREF': 0,
+        'DELETE_FAST': 0,
+        'DELETE_GLOBAL': 0,
+        'DELETE_NAME': 0,
+        'DELETE_SLICE+0': -1,
+        'DELETE_SLICE+1': -2,
+        'DELETE_SLICE+2': -2,
+        'DELETE_SLICE+3': -3,
+        'DELETE_SUBSCR': -2,
+        'DUP_TOP': 1,
+        'DUP_TOP_TWO': 2,
+        'END_FINALLY': -3,
+        'EXEC_STMT': -3,
+        'EXTENDED_ARG': 0,  # not listed in C
+        'FOR_ITER': 1,
+        'GET_AITER': 0,
+        'GET_ANEXT': 1,
+        'GET_AWAITABLE': 0,
+        'GET_ITER': 0,
+        'GET_YIELD_FROM_ITER': 0,
+        'IMPORT_FROM': 1,
+        'IMPORT_NAME': -1,
+        'IMPORT_STAR': -1,
+        'INPLACE_ADD': -1,
+        'INPLACE_AND': -1,
+        'INPLACE_DIVIDE': -1,
+        'INPLACE_FLOOR_DIVIDE': -1,
+        'INPLACE_LSHIFT': -1,
+        'INPLACE_MATRIX_MULTIPLY': -1,
+        'INPLACE_MODULO': -1,
+        'INPLACE_MULTIPLY': -1,
+        'INPLACE_OR': -1,
+        'INPLACE_POWER': -1,
+        'INPLACE_RSHIFT': -1,
+        'INPLACE_SUBTRACT': -1,
+        'INPLACE_TRUE_DIVIDE': -1,
+        'INPLACE_XOR': -1,
+        'JUMP_ABSOLUTE': 0,
+        'JUMP_FORWARD': 0,
+        'JUMP_IF_FALSE_OR_POP': 0,
+        'JUMP_IF_TRUE_OR_POP': 0,
+        'LIST_APPEND': -1,
+        'LOAD_ATTR': 0,
+        'LOAD_CLOSURE': 1,
+        'LOAD_CONST': 1,
+        'LOAD_DEREF': 1,
+        'LOAD_FAST': 1,
+        'LOAD_GLOBAL': 1,
+        'LOAD_LOCALS': 1,
+        'LOAD_NAME': 1,
+        'MAP_ADD': -2,
+        'NOP': 0,  # not listed in C
+        'POP_BLOCK': 0,
+        'POP_JUMP_IF_FALSE': -1,
+        'POP_JUMP_IF_TRUE': -1,
+        'POP_TOP': -1,
+        'PRINT_EXPR': -1,
+        'PRINT_ITEM': -1,
+        'PRINT_ITEM_TO': -2,
+        'PRINT_NEWLINE': 0,
+        'PRINT_NEWLINE_TO': -1,
+        'RETURN_VALUE': -1,
+        'ROT_FOUR': 0,
+        'ROT_THREE': 0,
+        'ROT_TWO': 0,
+        'SETUP_EXCEPT': 0,
+        'SETUP_FINALLY': 0,
+        'SETUP_LOOP': 0,
+        'SETUP_WITH': 4,
+        'SET_ADD': -1,
+        'SLICE+0': 0,
+        'SLICE+1': -1,
+        'SLICE+2': -1,
+        'SLICE+3': -2,
+        'STOP_CODE': 0,  # never emitted but included for completeness
+        'STORE_ATTR': -2,
+        'STORE_DEREF': -1,
+        'STORE_FAST': -1,
+        'STORE_GLOBAL': -1,
+        'STORE_MAP': -2,
+        'STORE_NAME': -1,
+        'STORE_SLICE+0': -2,
+        'STORE_SLICE+1': -3,
+        'STORE_SLICE+2': -3,
+        'STORE_SLICE+3': -4,
+        'STORE_SUBSCR': -3,
+        'UNARY_CONVERT': 0,
+        'UNARY_INVERT': 0,
+        'UNARY_NEGATIVE': 0,
+        'UNARY_NOT': 0,
+        'UNARY_POSITIVE': 0,
+        'WITH_CLEANUP': -1,
+        'YIELD_VALUE': 0,
+    }
+    return {opcode.opmap[opname]: value for opname, value in stack_effect_map.items()
+            if opname in opcode.opmap}
+
+
+def compute_func_opcode_stack_effect(instr):
+    instr_typ = type(instr)
+    nargs = (((instr.oparg) % _BYTE_LIMIT) + 2 * ((instr.oparg) / _BYTE_LIMIT))
+    if instr_typ == ops.CALL_FUNCTION:
+        return -nargs
+    elif instr_typ == ops.CALL_FUNCTION_VAR_KW:
+        return -nargs - 2
+    else:
+        return -nargs - 1
+
+
+def build_stack_effect_func_map():
+    stack_effect_func_map = {
+        ops.UNPACK_SEQUENCE: lambda instr: instr.oparg - 1,
+        ops.RAISE_VARARGS: lambda instr: -instr.oparg,
+        ops.MAKE_FUNCTION: lambda instr: -instr.oparg,
+        ops.MAKE_CLOSURE: lambda instr: -instr.oparg - 1,
+        ops.BUILD_SLICE: lambda instr: -2 if instr.oparg == 3 else -1,
+    }
+    if hasattr(ops, 'DUP_TOPX'):
+        stack_effect_func_map[ops.DUP_TOPX] = lambda instr: instr.oparg
+
+    build_opcodes = {ops.BUILD_TUPLE, ops.BUILD_LIST, ops.BUILD_SET}
+    for name in ('BUILD_LIST_UNPACK', 'BUILD_MAP_UNPACK',
+                 'BUILD_SET_UNPACK', 'BUILD_TUPLE_UNPACK'):
+        if hasattr(ops, name):
+            build_opcodes.add(getattr(ops, name))
+
+    for op in build_opcodes:
+        stack_effect_func_map[op] = lambda instr: 1 - instr.oparg
+
+    for op in (ops.CALL_FUNCTION, ops.CALL_FUNCTION_VAR, ops.CALL_FUNCTION_KW,
+               ops.CALL_FUNCTION_VAR_KW):
+        stack_effect_func_map[op] = compute_func_opcode_stack_effect
+    return {op.opcode: func for op, func in stack_effect_func_map.items()}
+
+stack_effect_map = build_stack_effect_map()
+stack_effect_func_map = build_stack_effect_func_map()
 
 
 def opcode_stack_effect(instr):
@@ -310,37 +361,16 @@ def opcode_stack_effect(instr):
 
     """
     opcode = instr.opcode
-    instr_typ = type(instr)
     try:
         return stack_effect_map[opcode]
     except KeyError:
         pass
-
-    if instr_typ is ops.UNPACK_SEQUENCE:
-        return instr.oparg - 1
-    elif instr_typ is ops.DUP_TOPX:
-        return instr.oparg
-    elif instr_typ in (ops.BUILD_TUPLE, ops.BUILD_LIST, ops.BUILD_SET):
-        return 1 - instr.oparg
-    elif instr_typ in (ops.RAISE_VARARGS, ops.MAKE_FUNCTION):
-        return -instr.oparg
-    elif instr_typ in (ops.CALL_FUNCTION, ops.CALL_FUNCTION_VAR, ops.CALL_FUNCTION_KW,
-                       ops.CALL_FUNCTION_VAR_KW):
-        nargs = (((instr.oparg) % _BYTE_LIMIT) + 2 * ((instr.oparg) / _BYTE_LIMIT))
-        if instr_typ == ops.CALL_FUNCTION:
-            return -nargs
-        elif instr_typ == ops.CALL_FUNCTION_VAR_KW:
-            return -nargs - 2
-        else:
-            return -nargs - 1
-    elif instr_typ == ops.BUILD_SLICE:
-        if instr.oparg == 3:
-            return -2
-        else:
-            return -1
-    elif instr_typ == ops.MAKE_CLOSURE:
-        return -instr.oparg - 1
-    raise ValueError('cannot compute stack effect for opcode %s' % instr)
+    try:
+        func = stack_effect_func_map[opcode]
+    except KeyError:
+        raise ValueError('cannot compute stack effect for opcode %s' % instr)
+    else:
+        return func(instr)
 
 
 Block = namedtuple('Block', ['begin_idx'])
