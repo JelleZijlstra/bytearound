@@ -13,7 +13,7 @@ def one_line_function(x): pass
 
 
 def test_genexpr():
-    co = function_with_one_line_genexpr.func_code.co_consts[1]
+    co = function_with_one_line_genexpr.__code__.co_consts[1]
     check(co)
     check(one_line_function)
 

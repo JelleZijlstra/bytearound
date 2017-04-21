@@ -38,7 +38,7 @@ def check_recursive(obj, seen=None):
         if hasattr(obj, '__dict__'):
             for val in obj.__dict__.itervalues():
                 check_recursive(val, seen=seen)
-        for attr in ('im_func', 'func_code'):
+        for attr in ('__func__', '__code__'):
             try:
                 val = getattr(obj, attr)
             except AttributeError:
@@ -56,8 +56,8 @@ def check(co):
     "2 ** 32".
 
     """
-    if hasattr(co, 'func_code'):
-        co = co.func_code
+    if hasattr(co, '__code__'):
+        co = co.__code__
     assert compare_code_objects(co, code_object.ByteAround.from_code(co).to_code(pessimize=True)), \
         'check failed for %s' % co
 

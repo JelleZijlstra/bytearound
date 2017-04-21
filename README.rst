@@ -25,13 +25,13 @@ And a simple modification::
     from bytearound import ByteAround
 
     def f():
-        print 'Hello World!'
+        print('Hello World!')
 
-    ba = ByteAround.from_code(f.func_code)
+    ba = ByteAround.from_code(f.__code__)
     for instr in ba:
         if instr.oparg == 'Hello World!':
             instr.oparg = 'Goodbye World!'
-    f.func_code = ba.to_code()
+    f.__code__ = ba.to_code()
     f()
 
 Design and limitations
