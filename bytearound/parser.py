@@ -6,8 +6,16 @@ Helper functions for parsing code objects into bytearound objects.
 from collections import defaultdict
 import itertools
 import opcode
+import sys
 
 from . import ops
+
+if sys.version_info < (3, 0):
+    def _index(lnotab, idx):
+        return ord(lnotab[idx])
+else:
+    def _index(lnotab, idx):
+        return lnotab[idx]
 
 
 def parse(co):
@@ -22,13 +30,13 @@ def parse(co):
     free_vars = co.co_cellvars + co.co_freevars
 
     while i < code_len:
-        op = ord(code[i])
+        op = _index(code, i)
         lineno = lineno_map[i]
         oparg = None
 
         i += 1
         if op >= opcode.HAVE_ARGUMENT:
-            raw_oparg = ord(code[i]) + ord(code[i + 1]) * 256 + extended_arg
+            raw_oparg = _index(code, i) + _index(code, i + 1) * 256 + extended_arg
             extended_arg = 0
             i += 2
             if op == opcode.EXTENDED_ARG:
@@ -88,6 +96,6 @@ def _parse_co_lnotab(co):
 def get_offsets_from_lnotab(lnotab):
     """Parses an lnotab string into (addr offset, line offset) pairs."""
     for offset in range(0, len(lnotab), 2):
-        addr_incr = ord(lnotab[offset])
-        line_incr = ord(lnotab[offset + 1])
+        addr_incr = _index(lnotab, offset)
+        line_incr = _index(lnotab, offset + 1)
         yield addr_incr, line_incr

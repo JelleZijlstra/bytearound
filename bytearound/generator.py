@@ -97,7 +97,7 @@ def generate(ba, pessimize=False):
             label_to_offset[instr] = current_offset
 
     if pessimize:
-        for name, insert_after in ba.pessimized_names.iteritems():
+        for name, insert_after in ba.pessimized_names.items():
             if name not in names:
                 if insert_after is None:
                     names.insert(0, name)
@@ -110,13 +110,13 @@ def generate(ba, pessimize=False):
                         names.insert(insert_index, name)
 
     def _add_op(op, oparg):
-        extended_arg = oparg / _EXTENDED_ARG_LIMIT
+        extended_arg = oparg // _EXTENDED_ARG_LIMIT
         rest_of_arg = oparg % _EXTENDED_ARG_LIMIT
         if extended_arg > 0:
             _add_op(opcode.EXTENDED_ARG, extended_arg)
         code.append(op)
         code.append(rest_of_arg % _BYTE_LIMIT)
-        code.append(rest_of_arg / _BYTE_LIMIT)
+        code.append(rest_of_arg // _BYTE_LIMIT)
 
     lnotab = []
     prev_lineno = prev_addr = 0
@@ -322,10 +322,10 @@ def build_stack_effect_map():
 
 if sys.version_info < (3, 0):
     def nargs(oparg):
-        return (((oparg) % _BYTE_LIMIT) + 2 * ((oparg) / _BYTE_LIMIT))
+        return (((oparg) % _BYTE_LIMIT) + 2 * ((oparg) // _BYTE_LIMIT))
 else:
     def nargs(oparg):
-        return (((oparg) % _BYTE_LIMIT) + 2 * (((oparg) / _BYTE_LIMIT)) % _BYTE_LIMIT)
+        return (((oparg) % _BYTE_LIMIT) + 2 * (((oparg) // _BYTE_LIMIT)) % _BYTE_LIMIT)
 
 
 def compute_func_opcode_stack_effect(instr):

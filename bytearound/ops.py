@@ -34,6 +34,12 @@ class Instruction(object):
             return NotImplemented
         return self.opcode == other.opcode and self.oparg == other.oparg and self.lineno == other.lineno
 
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __hash__(self):
+        return id(self)
+
     @classmethod
     def make(cls, opcode, oparg=None, lineno=0):
         cls = _OPCODE_TO_CLS[opcode]
