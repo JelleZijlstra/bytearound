@@ -100,6 +100,7 @@ class ByteAround(object):
             argcount -= 1
         return types.CodeType(
             argcount,
+            # TODO add kwonlyargcount
             len(varnames),  # nlocals
             generator.compute_stacksize(self),
             self.flags,
@@ -123,7 +124,7 @@ class ByteAround(object):
         """Wrapper around writing to self.instructions, to automatically set line numbers.
 
         The goal is to allow the user to create Instruction objects without having to specify line
-        numbers, and then set the correct line numbers when the users adds them using slice
+        numbers, and then set the correct line numbers when the user adds them using slice
         assignment.
 
         The approach taken here is to use linenos given in the instructions added to the code
